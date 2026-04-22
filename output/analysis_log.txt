@@ -1,0 +1,296 @@
+=================================================================
+STEP 1: LOAD AND EXPLORE THE DATA
+=================================================================
+
+Dataset shape : 3593 rows x 11 columns
+
+Column names  : ['Carrier', 'Airport_Distance', 'Number_of_flights', 'Weather', 'Support_Crew_Available', 'Baggage_loading_time', 'Late_Arrival_o', 'Cleaning_o', 'Fueling_o', 'Security_o', 'Arr_Delay']
+
+Data types:
+ Carrier                   object
+Airport_Distance           int64
+Number_of_flights          int64
+Weather                    int64
+Support_Crew_Available     int64
+Baggage_loading_time       int64
+Late_Arrival_o             int64
+Cleaning_o                 int64
+Fueling_o                  int64
+Security_o                 int64
+Arr_Delay                  int64
+
+First 5 rows:
+   Carrier  Airport_Distance  Number_of_flights  Weather  Support_Crew_Available  Baggage_loading_time  Late_Arrival_o  Cleaning_o  Fueling_o  Security_o  Arr_Delay
+0      UA               437              41300        5                      83                    17              19          15         26          31         58
+1      UA               451              41516        5                      82                    17              19          15         22          32         48
+2      AA               425              37404        5                     175                    16              17          14         28          29         16
+3      B6               454              44798        6                      49                    18              19          13         29          31         81
+4      DL               455              40643        6                      55                    17              19          18         26          37         62
+
+Descriptive statistics:
+        Airport_Distance  Number_of_flights  Weather  Support_Crew_Available  Baggage_loading_time  Late_Arrival_o  Cleaning_o  Fueling_o  Security_o  Arr_Delay
+count           3593.00            3593.00  3593.00                 3593.00               3593.00         3593.00     3593.00    3593.00     3593.00    3593.00
+mean             442.36           43310.91     5.35                   85.00                 16.98           18.74       10.02      25.01       37.09      69.80
+std               17.17            2797.43     0.48                   41.46                  0.68            0.79        3.47       3.50        7.07      29.22
+min              376.00           29475.00     5.00                    0.00                 14.00           15.00       -4.00      13.00       13.00       0.00
+25%              431.00           41634.00     5.00                   56.00                 17.00           18.00        8.00      23.00       32.00      49.00
+50%              443.00           43424.00     5.00                   83.00                 17.00           19.00       10.00      25.00       37.00      70.00
+75%              454.00           45140.00     6.00                  112.00                 17.00           19.00       12.00      27.00       42.00      90.00
+max              499.00           53461.00     6.00                  222.00                 19.00           22.00       23.00      36.00       63.00     180.00
+
+Missing values per column:
+ Carrier                   0
+Airport_Distance          0
+Number_of_flights         0
+Weather                   0
+Support_Crew_Available    0
+Baggage_loading_time      0
+Late_Arrival_o            0
+Cleaning_o                0
+Fueling_o                 0
+Security_o                0
+Arr_Delay                 0
+
+Carrier distribution:
+ Carrier
+UA    729
+B6    692
+DL    500
+EV    454
+AA    410
+MQ    308
+US    157
+WN    122
+9E    103
+VX     52
+FL     44
+AS     10
+F9      8
+HA      4
+
+=================================================================
+STEP 2: EXPLORING VARIABLES & ASSUMPTION CHECKS
+=================================================================
+
+Numeric columns: ['Airport_Distance', 'Number_of_flights', 'Weather', 'Support_Crew_Available', 'Baggage_loading_time', 'Late_Arrival_o', 'Cleaning_o', 'Fueling_o', 'Security_o', 'Arr_Delay']
+[Saved] 01_variable_distributions.png
+
+Skewness & Kurtosis:
+                         Skewness  Kurtosis
+Airport_Distance          -0.058     0.100
+Number_of_flights         -0.330     0.796
+Weather                    0.613    -1.625
+Support_Crew_Available     0.225    -0.249
+Baggage_loading_time      -0.236     0.284
+Late_Arrival_o            -0.192     0.283
+Cleaning_o                 0.051     0.220
+Fueling_o                  0.005    -0.104
+Security_o                 0.047     0.118
+Arr_Delay                  0.152    -0.205
+
+Shapiro-Wilk test on Arr_Delay (n=500): W=0.9937, p=0.0353
+  Normality: Rejected (p<0.05)
+
+=================================================================
+STEP 3: EVALUATING RELATIONSHIPS BETWEEN VARIABLES
+=================================================================
+
+Correlation matrix:
+                         Airport_Distance  Number_of_flights  Weather  Support_Crew_Available  Baggage_loading_time  Late_Arrival_o  Cleaning_o  Fueling_o  Security_o  Arr_Delay
+Airport_Distance                   1.000              0.406    0.148                  -0.170                 0.400           0.318      -0.003     -0.037       0.044      0.482
+Number_of_flights                  0.406              1.000    0.247                  -0.301                 0.672           0.571      -0.012     -0.043       0.075      0.823
+Weather                            0.148              0.247    1.000                  -0.111                 0.271           0.220       0.006      0.011       0.035      0.327
+Support_Crew_Available            -0.170             -0.301   -0.111                   1.000                -0.299          -0.242      -0.028      0.038      -0.015     -0.362
+Baggage_loading_time               0.400              0.672    0.271                  -0.299                 1.000           0.547      -0.012     -0.005       0.074      0.784
+Late_Arrival_o                     0.318              0.571    0.220                  -0.242                 0.547           1.000      -0.017     -0.021       0.081      0.667
+Cleaning_o                        -0.003             -0.012    0.006                  -0.028                -0.012          -0.017       1.000     -0.007      -0.011     -0.003
+Fueling_o                         -0.037             -0.043    0.011                   0.038                -0.005          -0.021      -0.007      1.000       0.017     -0.036
+Security_o                         0.044              0.075    0.035                  -0.015                 0.074           0.081      -0.011      0.017       1.000      0.080
+Arr_Delay                          0.482              0.823    0.327                  -0.362                 0.784           0.667      -0.003     -0.036       0.080      1.000
+[Saved] 02_correlation_heatmap.png
+[Saved] 03_scatter_plots.png
+
+Correlations with Arr_Delay (sorted by |r|):
+ Number_of_flights         0.823
+Baggage_loading_time      0.784
+Late_Arrival_o            0.667
+Airport_Distance          0.482
+Support_Crew_Available   -0.362
+Weather                   0.327
+Security_o                0.080
+Fueling_o                -0.036
+Cleaning_o               -0.003
+
+=================================================================
+STEP 4: FEATURE ENGINEERING & TRAIN/TEST SPLIT
+=================================================================
+
+Features after encoding : 22
+Train set : 2515 rows (70.0%)
+Test  set : 1078 rows  (30.0%)
+
+Feature list:
+['Airport_Distance', 'Number_of_flights', 'Weather', 'Support_Crew_Available', 'Baggage_loading_time', 'Late_Arrival_o', 'Cleaning_o', 'Fueling_o', 'Security_o', 'Carrier_AA', 'Carrier_AS', 'Carrier_B6', 'Carrier_DL', 'Carrier_EV', 'Carrier_F9', 'Carrier_FL', 'Carrier_HA', 'Carrier_MQ', 'Carrier_UA', 'Carrier_US', 'Carrier_VX', 'Carrier_WN']
+
+=================================================================
+STEP 5: MULTICOLLINEARITY CHECK (VIF)
+=================================================================
+
+VIF (all features, sorted):
+                Feature  VIF
+            Carrier_UA 6.82
+            Carrier_B6 6.19
+            Carrier_DL 5.14
+            Carrier_EV 4.85
+            Carrier_AA 4.47
+            Carrier_MQ 3.62
+            Carrier_US 2.41
+     Number_of_flights 2.14
+  Baggage_loading_time 2.12
+            Carrier_WN 2.05
+        Late_Arrival_o 1.66
+            Carrier_VX 1.48
+            Carrier_FL 1.41
+      Airport_Distance 1.24
+Support_Crew_Available 1.14
+            Carrier_AS 1.13
+               Weather 1.11
+            Carrier_F9 1.07
+            Carrier_HA 1.03
+            Security_o 1.02
+             Fueling_o 1.01
+            Cleaning_o 1.01
+
+  No features with VIF > 10 (multicollinearity acceptable).
+
+=================================================================
+STEP 6: BUILDING THE MULTIPLE LINEAR REGRESSION MODEL
+=================================================================
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:              Arr_Delay   R-squared:                       0.819
+Model:                            OLS   Adj. R-squared:                  0.817
+Method:                 Least Squares   F-statistic:                     512.5
+Date:                Wed, 22 Apr 2026   Prob (F-statistic):               0.00
+Time:                        11:52:07   Log-Likelihood:                -9905.9
+No. Observations:                2515   AIC:                         1.986e+04
+Df Residuals:                    2492   BIC:                         1.999e+04
+Df Model:                          22                                         
+Covariance Type:            nonrobust                                         
+==========================================================================================
+                             coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------------------
+const                   -569.4562      9.131    -62.368      0.000    -587.361    -551.552
+Airport_Distance           0.1670      0.016     10.178      0.000       0.135       0.199
+Number_of_flights          0.0044      0.000     33.998      0.000       0.004       0.005
+Weather                    4.2912      0.545      7.873      0.000       3.222       5.360
+Support_Crew_Available    -0.0468      0.006     -7.329      0.000      -0.059      -0.034
+Baggage_loading_time      13.2770      0.527     25.181      0.000      12.243      14.311
+Late_Arrival_o             7.0608      0.402     17.574      0.000       6.273       7.849
+Cleaning_o                 0.0048      0.073      0.067      0.947      -0.137       0.147
+Fueling_o                 -0.0328      0.072     -0.459      0.647      -0.173       0.107
+Security_o                 0.0042      0.036      0.117      0.907      -0.067       0.075
+Carrier_AA                -0.1773      1.658     -0.107      0.915      -3.428       3.074
+Carrier_AS                 0.5506      4.427      0.124      0.901      -8.131       9.232
+Carrier_B6                -1.0842      1.594     -0.680      0.496      -4.210       2.041
+Carrier_DL                -1.9794      1.626     -1.217      0.224      -5.169       1.210
+Carrier_EV                -2.0599      1.641     -1.255      0.210      -5.278       1.159
+Carrier_F9                -4.4746      5.788     -0.773      0.440     -15.824       6.875
+Carrier_FL                -0.9558      2.722     -0.351      0.726      -6.294       4.383
+Carrier_HA                 0.9912      8.980      0.110      0.912     -16.618      18.600
+Carrier_MQ                -0.3085      1.718     -0.180      0.858      -3.678       3.061
+Carrier_UA                -1.7628      1.579     -1.117      0.264      -4.858       1.333
+Carrier_US                -0.9047      1.913     -0.473      0.636      -4.657       2.847
+Carrier_VX                 0.0519      2.583      0.020      0.984      -5.014       5.117
+Carrier_WN                -1.9702      2.055     -0.959      0.338      -6.000       2.060
+==============================================================================
+Omnibus:                       42.818   Durbin-Watson:                   2.006
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):               47.685
+Skew:                           0.277   Prob(JB):                     4.42e-11
+Kurtosis:                       3.385   Cond. No.                     1.63e+06
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+[2] The condition number is large, 1.63e+06. This might indicate that there are
+strong multicollinearity or other numerical problems.
+
+=================================================================
+STEP 7: MODEL EVALUATION ON TEST SET
+=================================================================
+
+  R2  (test)        : 0.8195
+  Adj R2 (train)    : 0.8174
+  RMSE (test)       : 12.43 minutes
+  MAE  (test)       : 9.89 minutes
+  F-statistic       : 512.51  (p = 0.0000e+00)
+[Saved] 04_predicted_vs_actual.png
+[Saved] 05_residual_diagnostics.png
+
+  Durbin-Watson     : 2.0061
+  Autocorrelation   : None detected
+
+  Breusch-Pagan LM  : 15.4460  (p = 0.8424)
+  Homoscedasticity  : Supported
+
+=================================================================
+STEP 8: FEATURE IMPORTANCE
+=================================================================
+
+Top 15 standardized coefficients:
+                Feature  Std_Coeff
+     Number_of_flights    12.3846
+  Baggage_loading_time     9.1156
+        Late_Arrival_o     5.6320
+      Airport_Distance     2.8235
+               Weather     2.0621
+Support_Crew_Available    -1.9478
+            Carrier_UA    -0.7258
+            Carrier_EV    -0.6883
+            Carrier_DL    -0.6867
+            Carrier_B6    -0.4213
+            Carrier_WN    -0.3415
+            Carrier_F9    -0.1993
+            Carrier_US    -0.1826
+             Fueling_o    -0.1150
+            Carrier_FL    -0.1038
+[Saved] 06_feature_importance.png
+
+Top 10 permutation importances (R2 drop):
+                Feature  Importance
+     Number_of_flights      0.3639
+  Baggage_loading_time      0.2025
+        Late_Arrival_o      0.0746
+      Airport_Distance      0.0239
+               Weather      0.0118
+Support_Crew_Available      0.0106
+            Carrier_B6      0.0015
+            Carrier_UA      0.0006
+            Carrier_DL      0.0005
+            Carrier_EV      0.0003
+
+=================================================================
+STEP 9: FINAL MODEL SUMMARY
+=================================================================
+
+  +-----------------------------------------+
+  |     MULTIPLE LINEAR REGRESSION MODEL    |
+  |   Predicting Airline Arrival Delays     |
+  +-----------------------------------------+
+  | Dataset         : 3,594 observations    |
+  | Raw Features    : 10 columns            |
+  | Encoded Features: 22 (after one-hot)  |
+  | Train / Test    : 70% / 30%             |
+  +-----------------------------------------+
+  | R2  (test)      : 0.8195               |
+  | Adj. R2 (train) : 0.8174               |
+  | RMSE            : 12.43 minutes        |
+  | MAE             : 9.89 minutes        |
+  | F-statistic     : 512.51               |
+  | Durbin-Watson   : 2.0061               |
+  +-----------------------------------------+
+
+Charts saved to : C:\Users\Owner\Documents\itec5040-assignment-2\output
+Log saved to    : C:\Users\Owner\Documents\itec5040-assignment-2\output\analysis_log.txt
+
+Analysis complete.
