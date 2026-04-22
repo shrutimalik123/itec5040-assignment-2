@@ -7,7 +7,7 @@ Dataset: Chapter_06_flight_delay.csv
 =============================================================================
 """
 
-import sys, os, io, warnings
+import sys, os, warnings
 warnings.filterwarnings("ignore")
 
 import pandas as pd
@@ -30,7 +30,7 @@ from statsmodels.stats.stattools import durbin_watson
 from statsmodels.stats.diagnostic import het_breuschpagan
 from scipy import stats
 
-# ── seaborn style (works for both old and new versions) ─────────────────────
+# ── seaborn style (compatible with old and new versions) ────────────────────
 try:
     sns.set_theme(style="whitegrid", palette="muted")
 except AttributeError:
@@ -41,7 +41,7 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 OUT  = os.path.join(BASE, "output")
 os.makedirs(OUT, exist_ok=True)
 
-# ── Tee stdout to log file ────────────────────────────────────────────────────
+# ── Tee stdout to log file ───────────────────────────────────────────────────
 LOG_PATH = os.path.join(OUT, "analysis_log.txt")
 _lf = open(LOG_PATH, "w", encoding="utf-8")
 class _Tee:
@@ -50,9 +50,9 @@ class _Tee:
     def flush(self): self._a.flush(); self._b.flush()
 sys.stdout = _Tee(sys.__stdout__, _lf)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 1 – LOAD AND EXPLORE THE DATA
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
+# STEP 1 -- LOAD AND EXPLORE THE DATA
+# =============================================================================
 print("=" * 65)
 print("STEP 1: LOAD AND EXPLORE THE DATA")
 print("=" * 65)
@@ -68,9 +68,9 @@ print("\nDescriptive statistics:\n", df.describe().round(2).to_string())
 print("\nMissing values per column:\n", df.isnull().sum().to_string())
 print("\nCarrier distribution:\n", df["Carrier"].value_counts().to_string())
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 2 – INDIVIDUAL VARIABLE EXPLORATION & ASSUMPTION CHECKS
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
+# STEP 2 -- INDIVIDUAL VARIABLE EXPLORATION & ASSUMPTION CHECKS
+# =============================================================================
 print("\n" + "=" * 65)
 print("STEP 2: EXPLORING VARIABLES & ASSUMPTION CHECKS")
 print("=" * 65)
@@ -78,7 +78,7 @@ print("=" * 65)
 num_cols = df.select_dtypes(include="number").columns.tolist()
 print("\nNumeric columns:", num_cols)
 
-# Histograms
+# Histograms for all numeric variables
 fig, axes = plt.subplots(2, 5, figsize=(18, 7))
 axes = axes.flatten()
 for i, col in enumerate(num_cols):
@@ -94,22 +94,22 @@ plt.savefig(os.path.join(OUT, "01_variable_distributions.png"),
 plt.close()
 print("[Saved] 01_variable_distributions.png")
 
-# Skewness & kurtosis
+# Skewness & Kurtosis
 sk_kt = pd.DataFrame({
     "Skewness": df[num_cols].skew().round(3),
     "Kurtosis": df[num_cols].kurt().round(3)
 })
 print("\nSkewness & Kurtosis:\n", sk_kt.to_string())
 
-# Shapiro-Wilk on Arr_Delay
+# Shapiro-Wilk normality test on target variable
 sample = df["Arr_Delay"].sample(500, random_state=SEED).values
 stat_sw, p_sw = stats.shapiro(sample)
 print(f"\nShapiro-Wilk test on Arr_Delay (n=500): W={stat_sw:.4f}, p={p_sw:.4f}")
 print("  Normality:", "Rejected (p<0.05)" if p_sw < 0.05 else "Supported (p>=0.05)")
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 3 – RELATIONSHIPS BETWEEN VARIABLES
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
+# STEP 3 -- RELATIONSHIPS BETWEEN VARIABLES
+# =============================================================================
 print("\n" + "=" * 65)
 print("STEP 3: EVALUATING RELATIONSHIPS BETWEEN VARIABLES")
 print("=" * 65)
@@ -117,6 +117,7 @@ print("=" * 65)
 corr = df[num_cols].corr().round(3)
 print("\nCorrelation matrix:\n", corr.to_string())
 
+# Correlation heatmap
 fig, ax = plt.subplots(figsize=(11, 8))
 mask = np.triu(np.ones_like(corr, dtype=bool))
 sns.heatmap(corr, mask=mask, annot=True, fmt=".2f", cmap="coolwarm",
@@ -128,16 +129,16 @@ plt.savefig(os.path.join(OUT, "02_correlation_heatmap.png"),
 plt.close()
 print("[Saved] 02_correlation_heatmap.png")
 
-# Scatter plots (key predictors vs target)
-key_preds = ["Airport_Distance","Weather","Baggage_loading_time",
-             "Late_Arrival_o","Security_o"]
+# Scatter plots of key predictors vs target
+key_preds = ["Airport_Distance", "Weather", "Baggage_loading_time",
+             "Late_Arrival_o", "Security_o"]
 fig, axes = plt.subplots(1, 5, figsize=(20, 4))
 for ax, col in zip(axes, key_preds):
     ax.scatter(df[col].values, df["Arr_Delay"].values,
                alpha=0.35, color="#4C72B0", s=20, edgecolors="none")
     m, b = np.polyfit(df[col].values, df["Arr_Delay"].values, 1)
     x_line = np.linspace(df[col].min(), df[col].max(), 100)
-    ax.plot(x_line, m*x_line + b, "r-", linewidth=1.5)
+    ax.plot(x_line, m * x_line + b, "r-", linewidth=1.5)
     r = corr.loc[col, "Arr_Delay"]
     ax.set_title(f"{col}\n(r = {r:.3f})", fontsize=9, fontweight="bold")
     ax.set_xlabel(col, fontsize=8); ax.set_ylabel("Arr_Delay", fontsize=8)
@@ -149,12 +150,13 @@ plt.savefig(os.path.join(OUT, "03_scatter_plots.png"),
 plt.close()
 print("[Saved] 03_scatter_plots.png")
 
-target_corr = corr["Arr_Delay"].drop("Arr_Delay").sort_values(key=abs, ascending=False)
+target_corr = corr["Arr_Delay"].drop("Arr_Delay").sort_values(
+    key=abs, ascending=False)
 print("\nCorrelations with Arr_Delay (sorted by |r|):\n", target_corr.to_string())
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 4 – FEATURE ENGINEERING & TRAIN / TEST SPLIT
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
+# STEP 4 -- FEATURE ENGINEERING & TRAIN / TEST SPLIT
+# =============================================================================
 print("\n" + "=" * 65)
 print("STEP 4: FEATURE ENGINEERING & TRAIN/TEST SPLIT")
 print("=" * 65)
@@ -176,13 +178,13 @@ print(f"Train set : {len(X_train)} rows ({len(X_train)/len(df)*100:.1f}%)")
 print(f"Test  set : {len(X_test)} rows  ({len(X_test)/len(df)*100:.1f}%)")
 print(f"\nFeature list:\n{list(feat_cols)}")
 
-scaler = StandardScaler()
+scaler     = StandardScaler()
 X_train_sc = pd.DataFrame(scaler.fit_transform(X_train), columns=X_train.columns)
 X_test_sc  = pd.DataFrame(scaler.transform(X_test),      columns=X_test.columns)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 5 – VARIANCE INFLATION FACTOR (Multicollinearity)
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
+# STEP 5 -- VARIANCE INFLATION FACTOR (Multicollinearity Check)
+# =============================================================================
 print("\n" + "=" * 65)
 print("STEP 5: MULTICOLLINEARITY CHECK (VIF)")
 print("=" * 65)
@@ -201,9 +203,9 @@ if hi_vif.empty:
 else:
     print("\n  High VIF (>10):\n", hi_vif.to_string(index=False))
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 6 – BUILD OLS REGRESSION MODEL
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
+# STEP 6 -- BUILD OLS REGRESSION MODEL
+# =============================================================================
 print("\n" + "=" * 65)
 print("STEP 6: BUILDING THE MULTIPLE LINEAR REGRESSION MODEL")
 print("=" * 65)
@@ -212,9 +214,9 @@ X_tr_ols = sm.add_constant(X_train)
 ols      = sm.OLS(y_train, X_tr_ols).fit()
 print(ols.summary())
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 7 – EVALUATE MODEL ON TEST SET
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
+# STEP 7 -- EVALUATE MODEL ON TEST SET
+# =============================================================================
 print("\n" + "=" * 65)
 print("STEP 7: MODEL EVALUATION ON TEST SET")
 print("=" * 65)
@@ -222,12 +224,12 @@ print("=" * 65)
 X_te_ols = sm.add_constant(X_test, has_constant="add")
 y_pred   = ols.predict(X_te_ols)
 
-rmse        = float(np.sqrt(mean_squared_error(y_test, y_pred)))
-mae         = float(mean_absolute_error(y_test, y_pred))
-r2          = float(r2_score(y_test, y_pred))
-adj_r2_tr   = float(ols.rsquared_adj)
-fstat       = float(ols.fvalue)
-f_pval      = float(ols.f_pvalue)
+rmse      = float(np.sqrt(mean_squared_error(y_test, y_pred)))
+mae       = float(mean_absolute_error(y_test, y_pred))
+r2        = float(r2_score(y_test, y_pred))
+adj_r2_tr = float(ols.rsquared_adj)
+fstat     = float(ols.fvalue)
+f_pval    = float(ols.f_pvalue)
 
 print(f"\n  R2  (test)        : {r2:.4f}")
 print(f"  Adj R2 (train)    : {adj_r2_tr:.4f}")
@@ -235,7 +237,7 @@ print(f"  RMSE (test)       : {rmse:.2f} minutes")
 print(f"  MAE  (test)       : {mae:.2f} minutes")
 print(f"  F-statistic       : {fstat:.2f}  (p = {f_pval:.4e})")
 
-# -- Predicted vs Actual
+# Predicted vs Actual plot
 fig, ax = plt.subplots(figsize=(8, 6))
 ax.scatter(y_test.values, y_pred.values, alpha=0.45, edgecolors="white",
            linewidth=0.4, color="#4C72B0", s=45, label="Predictions")
@@ -253,7 +255,7 @@ plt.savefig(os.path.join(OUT, "04_predicted_vs_actual.png"),
 plt.close()
 print("[Saved] 04_predicted_vs_actual.png")
 
-# -- Residual diagnostics
+# Residual diagnostics
 residuals = y_test.values - y_pred.values
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 axes[0].scatter(y_pred.values, residuals, alpha=0.4, color="#DD8452",
@@ -270,21 +272,21 @@ plt.savefig(os.path.join(OUT, "05_residual_diagnostics.png"),
 plt.close()
 print("[Saved] 05_residual_diagnostics.png")
 
-# -- Durbin-Watson
+# Durbin-Watson test
 dw = float(durbin_watson(ols.resid))
 print(f"\n  Durbin-Watson     : {dw:.4f}")
 print("  Autocorrelation   :", "None detected" if 1.5 < dw < 2.5
       else "Possible autocorrelation")
 
-# -- Breusch-Pagan
+# Breusch-Pagan test
 bp_lm, bp_p, _, _ = het_breuschpagan(ols.resid, X_tr_ols)
 print(f"\n  Breusch-Pagan LM  : {bp_lm:.4f}  (p = {bp_p:.4f})")
 print("  Homoscedasticity  :", "Supported" if bp_p >= 0.05
       else "Rejected - heteroscedasticity present")
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 8 – FEATURE IMPORTANCE
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
+# STEP 8 -- FEATURE IMPORTANCE
+# =============================================================================
 print("\n" + "=" * 65)
 print("STEP 8: FEATURE IMPORTANCE")
 print("=" * 65)
@@ -303,14 +305,15 @@ ax.barh(coef_df["Feature"].values[::-1],
         color=colors[::-1], edgecolor="white", height=0.65)
 ax.axvline(0, color="black", linewidth=0.8)
 ax.set_xlabel("Standardized Coefficient")
-ax.set_title("Top 15 Features by Standardized OLS Coefficient", fontweight="bold")
+ax.set_title("Top 15 Features by Standardized OLS Coefficient",
+             fontweight="bold")
 plt.tight_layout()
 plt.savefig(os.path.join(OUT, "06_feature_importance.png"),
             dpi=150, bbox_inches="tight")
 plt.close()
 print("[Saved] 06_feature_importance.png")
 
-# -- Permutation importance
+# Permutation importance
 perm = permutation_importance(sk_model, X_test_sc, y_test,
                               n_repeats=20, random_state=SEED, scoring="r2")
 perm_df = pd.DataFrame({
@@ -320,9 +323,9 @@ perm_df = pd.DataFrame({
 print("\nTop 10 permutation importances (R2 drop):\n",
       perm_df.round(4).to_string(index=False))
 
-# ─────────────────────────────────────────────────────────────────────────────
-# STEP 9 – FINAL SUMMARY
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
+# STEP 9 -- FINAL SUMMARY
+# =============================================================================
 print("\n" + "=" * 65)
 print("STEP 9: FINAL MODEL SUMMARY")
 print("=" * 65)
@@ -331,7 +334,7 @@ print(f"""
   |     MULTIPLE LINEAR REGRESSION MODEL    |
   |   Predicting Airline Arrival Delays     |
   +-----------------------------------------+
-  | Dataset         : 3,594 observations    |
+  | Dataset         : 3,593 observations    |
   | Raw Features    : 10 columns            |
   | Encoded Features: {X_train.shape[1]:>2} (after one-hot)  |
   | Train / Test    : 70% / 30%             |
@@ -339,7 +342,7 @@ print(f"""
   | R2  (test)      : {r2:.4f}               |
   | Adj. R2 (train) : {adj_r2_tr:.4f}               |
   | RMSE            : {rmse:.2f} minutes        |
-  | MAE             : {mae:.2f} minutes        |
+  | MAE             : {mae:.2f} minutes         |
   | F-statistic     : {fstat:.2f}               |
   | Durbin-Watson   : {dw:.4f}               |
   +-----------------------------------------+
@@ -348,6 +351,6 @@ print(f"Charts saved to : {OUT}")
 print(f"Log saved to    : {LOG_PATH}")
 print("\nAnalysis complete.")
 
-# restore stdout and close log
+# Restore stdout and close log
 sys.stdout = sys.__stdout__
 _lf.close()
